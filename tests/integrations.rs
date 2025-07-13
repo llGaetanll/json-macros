@@ -22,6 +22,27 @@ fn test_false() {
 }
 
 #[test]
+fn test_number_whole() {
+    let mut buf = Vec::new();
+    json!(buf, 1);
+    assert_eq!(buf, b"1");
+}
+
+#[test]
+fn test_number_negative() {
+    let mut buf = Vec::new();
+    json!(buf, -1);
+    assert_eq!(buf, b"-1");
+}
+
+#[test]
+fn test_number_float() {
+    let mut buf = Vec::new();
+    json!(buf, 3.141592653);
+    assert_eq!(buf, b"3.141592653");
+}
+
+#[test]
 fn test_string_empty() {
     let mut buf = Vec::new();
     json!(buf, "");
@@ -35,17 +56,7 @@ fn test_string_nonempty() {
     assert_eq!(buf, b"\"Hello, world\"");
 }
 
-// TODO
-//
-// for empty array, the generated macro looks like
-// ```
-// buf.push(b'[');
-// buf.push(b']');
-// ```
-// which causes the clippy lint to trigger. We should probably have better generation for empty
-// arrays anyway.
 #[test]
-#[allow(clippy::vec_init_then_push)]
 fn test_array_empty() {
     let mut buf = Vec::new();
     json!(buf, []);
@@ -100,5 +111,5 @@ fn test_object_deep() {
             },
         ]
     });
-    // assert_eq!(buf, ...); TODO: complete this
+    assert_eq!(buf, br#"{"name":"Michael","age":42,"friends":[{"name":"Emily","age":29},{"name":"Jim","age":25}]}"#);
 }

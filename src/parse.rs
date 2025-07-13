@@ -1,4 +1,10 @@
-use syn::{braced, bracketed, parse::ParseStream, Expr, Ident, Lit, Token};
+use syn::Expr;
+use syn::Ident;
+use syn::Lit;
+use syn::Token;
+use syn::braced;
+use syn::bracketed;
+use syn::parse::ParseStream;
 
 pub struct JsonArgs {
     pub buf: Expr,

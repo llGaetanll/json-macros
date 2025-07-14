@@ -1,5 +1,6 @@
 use quote::quote;
 use syn::Expr;
+use syn::Ident;
 
 use crate::parse::JsonValue;
 
@@ -25,6 +26,12 @@ fn gen_string(buf: &Expr, s: &str) -> proc_macro2::TokenStream {
 
 fn gen_number(buf: &Expr, n: &str) -> proc_macro2::TokenStream {
     quote! { #buf.extend_from_slice(#n.as_bytes()); }
+}
+
+fn gen_dyn(buf: &Expr, d: &Ident) -> proc_macro2::TokenStream {
+    quote! {
+        #buf.extend_from_slice(#d.to_string().as_bytes());
+    }
 }
 
 fn gen_array(buf: &Expr, arr: &[JsonValue]) -> proc_macro2::TokenStream {
@@ -73,5 +80,6 @@ pub fn gen_value(buf: &Expr, value: &JsonValue) -> proc_macro2::TokenStream {
         JsonValue::Number(n) => gen_number(buf, n),
         JsonValue::Array(arr) => gen_array(buf, arr),
         JsonValue::Object(obj) => gen_object(buf, obj),
+        JsonValue::Dyn(ident) => gen_dyn(buf, ident),
     }
 }

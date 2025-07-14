@@ -1,10 +1,10 @@
+use syn::braced;
+use syn::bracketed;
+use syn::parse::ParseStream;
 use syn::Expr;
 use syn::Ident;
 use syn::Lit;
 use syn::Token;
-use syn::braced;
-use syn::bracketed;
-use syn::parse::ParseStream;
 
 pub struct JsonArgs {
     pub buf: Expr,
@@ -28,6 +28,7 @@ pub enum JsonValue {
     Number(String),
     Array(Vec<JsonValue>),
     Object(Vec<(String, JsonValue)>),
+    Dyn(Ident),
 }
 
 impl syn::parse::Parse for JsonValue {
@@ -80,15 +81,14 @@ fn parse_array(input: ParseStream) -> syn::Result<JsonValue> {
     Ok(JsonValue::Array(elements))
 }
 
-// TODO: Just null for now, but soon this will be used for non-literal values too
 fn parse_ident(input: ParseStream) -> syn::Result<JsonValue> {
     let ident: Ident = input.parse()?;
 
     if ident == "null" {
-        Ok(JsonValue::Null)
-    } else {
-        Err(syn::Error::new_spanned(ident, "unknown identifier"))
+        return Ok(JsonValue::Null);
     }
+
+    Ok(JsonValue::Dyn(ident))
 }
 
 fn parse_lit(input: ParseStream) -> syn::Result<JsonValue> {

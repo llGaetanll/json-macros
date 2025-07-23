@@ -6,7 +6,7 @@ fn main() {
 
     let name = "Alice Johnson";
     let age = 29u32;
-    let is_active = true;
+    let active = true;
     let height = 5.7f64;
     let scores = vec![85, 92, 78, 96, 88];
     let tags = ["developer", "rust", "backend"];
@@ -14,14 +14,14 @@ fn main() {
     let metadata = vec![true, false, true];
 
     json!(buf, {
-        name: name,
-        age: age,
-        active: is_active,
-        height: height,
+        name,
+        age,
+        active,
+        height,
         test_scores: scores,
         skills: tags,
         location: {
-            coordinates: coordinates,
+            coordinates,
             city: "New York",
             country: "USA"
         },

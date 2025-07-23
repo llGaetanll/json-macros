@@ -49,11 +49,17 @@ fn parse_object(input: ParseStream) -> syn::Result<JsonValue> {
     let content;
     braced!(content in input);
 
-    let mut fields = Vec::new();
+    let mut fields: Vec<(String, JsonValue)> = Vec::new();
     while !content.is_empty() {
         let key: Ident = content.parse()?;
-        content.parse::<Token![:]>()?;
-        let value: JsonValue = content.parse()?;
+
+        let value: JsonValue = if content.peek(Token![:]) {
+            content.parse::<Token![:]>()?;
+            content.parse()?
+        } else {
+            JsonValue::Dyn(key.clone())
+        };
+
         fields.push((key.to_string(), value));
 
         if !content.is_empty() {

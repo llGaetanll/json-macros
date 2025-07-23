@@ -2,6 +2,10 @@ pub trait Serialize {
     fn serialize(&self, buf: &mut Vec<u8>);
 }
 
+impl Serialize for () {
+    fn serialize(&self, _buf: &mut Vec<u8>) {}
+}
+
 macro_rules! serialize_int {
     ($($type:ty),* $(,)?) => {
         $(
@@ -69,4 +73,49 @@ where
             None => buf.extend_from_slice(b"null"),
         }
     }
+}
+
+fn serialize_slice_like<T: AsRef<[S]>, S: Serialize>(arr: T, buf: &mut Vec<u8>) {
+    let arr: &[S] = arr.as_ref();
+
+    buf.push(b'[');
+    for (i, item) in arr.iter().enumerate() {
+        if i > 0 {
+            buf.push(b',');
+        }
+
+        item.serialize(buf);
+    }
+    buf.push(b']');
+}
+
+impl<T, const N: usize> Serialize for [T; N]
+where
+    T: Serialize,
+{
+    fn serialize(&self, buf: &mut Vec<u8>) {
+        serialize_slice_like(self, buf);
+    }
+}
+
+macro_rules! serialize_slice_like {
+    ($($ty:ty),* $(,)?) => {
+        $(
+            impl<T> Serialize for $ty
+            where
+                T: Serialize,
+            {
+                fn serialize(&self, buf: &mut Vec<u8>) {
+                    serialize_slice_like(self, buf);
+                }
+            }
+        )*
+    };
+}
+
+serialize_slice_like! {
+    Vec<T>,
+    &[T],
+    &mut [T],
+    Box<[T]>,
 }

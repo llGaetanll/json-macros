@@ -1,4 +1,14 @@
-use json_macro_writer::json;
+use json_traits::Serialize;
+use json_writer::json;
+
+macro_rules! assert_eq {
+    ($left:expr, $right:expr) => {
+        ::core::assert_eq!(
+            String::from_utf8_lossy(&$left),
+            String::from_utf8_lossy($right)
+        )
+    };
+}
 
 #[test]
 fn test_true() {
@@ -52,8 +62,6 @@ fn test_number_float() {
     assert_eq!(buf, b"3.1415927");
 }
 
-// TODO: We need to know what type `value` is because literally writing it out to the buffer might
-// not work. If it's a string, it needs to be quoted.
 #[test]
 fn test_string_empty() {
     let mut buf = Vec::new();

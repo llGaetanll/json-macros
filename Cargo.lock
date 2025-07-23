@@ -3,12 +3,26 @@
 version = 4
 
 [[package]]
-name = "json-macro-writer"
+name = "itoa"
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
+
+[[package]]
+name = "json-traits"
 version = "0.1.0"
 dependencies = [
+ "itoa",
+ "ryu",
+]
+
+[[package]]
+name = "json-writer"
+version = "0.1.0"
+dependencies = [
+ "json-traits",
  "proc-macro2",
  "quote",
- "serde",
  "syn",
 ]
 
@@ -31,8 +45,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde"
-version = "0.1.0"
+name = "ryu"
+version = "1.0.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 
 [[package]]
 name = "syn"

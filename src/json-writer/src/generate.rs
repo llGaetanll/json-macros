@@ -9,28 +9,22 @@ fn gen_null(buf: &Expr) -> proc_macro2::TokenStream {
 }
 
 fn gen_bool(buf: &Expr, b: bool) -> proc_macro2::TokenStream {
-    if b {
-        quote! { #buf.extend_from_slice(b"true"); }
-    } else {
-        quote! { #buf.extend_from_slice(b"false"); }
+    quote! {
+        #b.serialize(&mut #buf);
     }
 }
 
 fn gen_string(buf: &Expr, s: &str) -> proc_macro2::TokenStream {
     quote! {
-        #buf.push(b'"');
-        #buf.extend_from_slice(#s.as_bytes());
-        #buf.push(b'"');
+        #s.serialize(&mut #buf);
     }
 }
 
 fn gen_number(buf: &Expr, n: &str) -> proc_macro2::TokenStream {
-    quote! { #buf.extend_from_slice(#n.as_bytes()); }
-}
-
-fn gen_dyn(buf: &Expr, d: &Ident) -> proc_macro2::TokenStream {
+    // TODO: We would use .serialize, but numbers are
+    // represented as strs internally and so they get quoted
     quote! {
-        #buf.extend_from_slice(#d.to_string().as_bytes());
+        #buf.extend_from_slice(#n.as_bytes());
     }
 }
 
@@ -70,6 +64,12 @@ fn gen_object(buf: &Expr, obj: &[(String, JsonValue)]) -> proc_macro2::TokenStre
     }
     statements.push(quote! { #buf.push(b'}'); });
     quote! { #(#statements)* }
+}
+
+fn gen_dyn(buf: &Expr, d: &Ident) -> proc_macro2::TokenStream {
+    quote! {
+        #d.serialize(&mut #buf);
+    }
 }
 
 pub fn gen_value(buf: &Expr, value: &JsonValue) -> proc_macro2::TokenStream {

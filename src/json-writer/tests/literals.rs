@@ -1,4 +1,14 @@
-use json_macro_writer::json;
+use json_traits::Serialize;
+use json_writer::json;
+
+macro_rules! assert_eq {
+    ($left:expr, $right:expr) => {
+        ::core::assert_eq!(
+            String::from_utf8_lossy(&$left),
+            String::from_utf8_lossy($right)
+        )
+    };
+}
 
 #[test]
 fn test_null() {
@@ -17,7 +27,7 @@ fn test_true() {
 #[test]
 fn test_false() {
     let mut buf = Vec::new();
-    json!(buf, false);
+    json!(&mut buf, false);
     assert_eq!(buf, b"false");
 }
 

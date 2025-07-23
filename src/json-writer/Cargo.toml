@@ -1,5 +1,5 @@
 [package]
-name = "json-macro-writer"
+name = "json-writer"
 version = "0.1.0"
 edition = "2024"
 
@@ -11,4 +11,4 @@ proc-macro2 = { workspace = true }
 quote = { workspace = true }
 syn = { workspace = true }
 
-serde = { path = "../serde" }
+json-traits = { path = "../json-traits" }

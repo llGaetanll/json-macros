@@ -55,12 +55,26 @@ impl Serialize for bool {
     }
 }
 
-impl Serialize for &'_ str {
-    fn serialize(&self, buf: &mut Vec<u8>) {
-        buf.push(b'"');
-        buf.extend_from_slice(self.as_bytes());
-        buf.push(b'"');
-    }
+macro_rules! serialize_string_like {
+    ($($ty:ty),* $(,)?) => {
+        $(
+            impl Serialize for $ty {
+                fn serialize(&self, buf: &mut Vec<u8>) {
+                    buf.push(b'"');
+                    buf.extend_from_slice(self.as_bytes());
+                    buf.push(b'"');
+                }
+            }
+        )*
+    };
+}
+
+serialize_string_like! {
+    String,
+    &str,
+    &String,
+    Box<str>,
+    std::borrow::Cow<'_, str>,
 }
 
 impl<T> Serialize for Option<T>

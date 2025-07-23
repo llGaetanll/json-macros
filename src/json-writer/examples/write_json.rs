@@ -4,7 +4,7 @@ use json_writer::json;
 fn main() {
     let mut buf = Vec::new();
 
-    let name = "Alice Johnson";
+    let name = String::from("Alice Johnson");
     let age = 29u32;
     let active = true;
     let height = 5.7f64;

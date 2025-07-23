@@ -1,21 +1,26 @@
 # Notes & TODOs
 
+## Basics
 - [x] Support null
 - [x] Support lit bools
 - [x] Support lit strings (maybe not specification-compliant)
 - [x] Support lit numbers (not fully specification-compliant, but works with rust ints and floats)
 - [x] Support lit arrays
 - [x] Support lit objects
-- [ ] Support non-literals
-    - [ ] options (map to null?)
-    - [ ] bools
-    - [ ] strings
-    - [ ] numbers
-    - [ ] arrays
+- [x] Support non-literals
+    - [x] options (map to null?)
+    - [x] bools
+    - [x] strings
+    - [x] numbers
+    - [x] arrays
     - [ ] objects
+- [x] Support dyn object value contraction
 - [ ] Composability
-- [ ] Works on types more general than `&mut Vec<u8>`
+- [ ] Add derive macro for `Serialize`
+
+## Reach
 - [ ] Better optimizations on mostly-literal objects
+- [ ] Writes to types more general than `&mut Vec<u8>`
 
 ## Non-literal support
 

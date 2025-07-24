@@ -1,23 +1,27 @@
+use json_traits::Serialize;
+use json_writer::json;
+
+fn gen_profile(first: &str, last: &str) -> impl Serialize {
+    move |buf: &mut Vec<u8>| {
+        json!(buf, {
+            first,
+            last,
+        });
+    }
+}
+
 fn main() {
-    let mut buf: Vec<u8> = Vec::new();
+    let mut buf = Vec::new();
 
-    let real = |buf: &mut Vec<u8>| {
-        buf.extend(b"true");
-    };
+    let profile = gen_profile("Michael", "Scott");
 
-    let verdict = |buf: &mut Vec<u8>| {
-        buf.push(b'{');
+    // Works like this
+    json!(&mut buf, {
+        profile,
+    });
 
-        buf.push(b'"');
-        buf.extend_from_slice("verdict".as_bytes());
-        buf.push(b'"');
+    // Or like this
+    json!(&mut buf, [profile]);
 
-        buf.push(b':');
-
-        real(buf);
-
-        buf.push(b'}');
-    };
-
-    verdict(&mut buf);
+    println!("{}", String::from_utf8_lossy(&buf));
 }

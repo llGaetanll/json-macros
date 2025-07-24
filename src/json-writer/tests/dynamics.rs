@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use json_traits::Serialize;
 use json_writer::json;
 
@@ -111,4 +113,28 @@ fn test_array_many() {
     json!(buf, value);
 
     assert_eq!(buf, b"[true,false]");
+}
+
+#[test]
+fn test_object_empty() {
+    let mut buf = Vec::new();
+
+    let map: HashMap<String, i32> = HashMap::new();
+    json!(buf, map);
+
+    assert_eq!(buf, b"{}");
+}
+
+#[test]
+#[ignore] // Can't be checked accurately because key order in maps is not enforced
+fn test_object_shallow() {
+    let mut buf = Vec::new();
+
+    let map: HashMap<String, String> = [("first", "Michael"), ("last", "Scott")]
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .into_iter()
+        .collect();
+    json!(buf, map);
+
+    assert_eq!(buf, br#"{"first":"Michael","last":"Scott"}"#);
 }

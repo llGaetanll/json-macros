@@ -65,6 +65,52 @@ macro_rules! serialize_string_like {
                     buf.push(b'"');
                 }
             }
+
+            impl<T> Serialize for ::std::collections::HashMap<$ty, T>
+            where
+                T: Serialize,
+            {
+                fn serialize(&self, buf: &mut Vec<u8>) {
+                    buf.push(b'{');
+                    for (i, (k, v)) in self.iter().enumerate() {
+                        if i > 0 {
+                            buf.push(b',');
+                        }
+
+                        buf.push(b'"');
+                        buf.extend_from_slice(k.as_bytes());
+                        buf.push(b'"');
+
+                        buf.push(b':');
+
+                        v.serialize(buf);
+                    }
+                    buf.push(b'}');
+                }
+            }
+
+            impl<T> Serialize for ::std::collections::BTreeMap<$ty, T>
+            where
+                T: Serialize,
+            {
+                fn serialize(&self, buf: &mut Vec<u8>) {
+                    buf.push(b'{');
+                    for (i, (k, v)) in self.iter().enumerate() {
+                        if i > 0 {
+                            buf.push(b',');
+                        }
+
+                        buf.push(b'"');
+                        buf.extend_from_slice(k.as_bytes());
+                        buf.push(b'"');
+
+                        buf.push(b':');
+
+                        v.serialize(buf);
+                    }
+                    buf.push(b'}');
+                }
+            }
         )*
     };
 }

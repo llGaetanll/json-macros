@@ -179,3 +179,13 @@ serialize_slice_like! {
     &mut [T],
     Box<[T]>,
 }
+
+// WARN: Maybe this is a mistake
+impl<F> Serialize for F
+where
+    F: Fn(&mut Vec<u8>),
+{
+    fn serialize(&self, buf: &mut Vec<u8>) {
+        self(buf)
+    }
+}

@@ -177,3 +177,52 @@ verdict(&mut buf);
 ```
 
 This code does not allocate, and the closures are optimized away.
+
+#### Problem: What *is* a `JsonValue::Dyn`?
+The code above is great and all, but it does break this
+```rust
+let value = true;
+let verdict = write_json!(buf, {
+    verdict: value
+});
+```
+
+Since we expect `value` to be a function, our macro now expands to
+```rust
+let real = true;
+
+let verdict = |buf: &mut Vec<u8>| {
+    buf.push(b'{');
+
+    buf.push(b'"');
+    buf.extend_from_slice("verdict".as_bytes());
+    buf.push(b'"');
+
+    buf.push(b':');
+
+    real(buf);
+
+    buf.push(b'}');
+}
+```
+
+Which of course makes no sense, since `real` is not a function, its a `bool`.
+What we can do instead is `impl Serialize for F: Fn(&mut Vec<u8>)`. By doing
+this, we can instead generate this code:
+```rust
+let real = // Just something here that impls Serialize
+
+let verdict = |buf: &mut Vec<u8>| {
+    buf.push(b'{');
+
+    buf.push(b'"');
+    buf.extend_from_slice("verdict".as_bytes());
+    buf.push(b'"');
+
+    buf.push(b':');
+
+    real.serialize(&mut buf);
+
+    buf.push(b'}');
+}
+```

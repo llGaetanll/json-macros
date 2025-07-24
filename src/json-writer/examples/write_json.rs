@@ -1,5 +1,5 @@
 use json_traits::Serialize;
-use json_writer::json;
+use json_writer::json_write;
 
 fn main() {
     let mut buf = Vec::new();
@@ -13,7 +13,7 @@ fn main() {
     let coordinates = [40.7128, -74.0060];
     let metadata = vec![true, false, true];
 
-    json!(buf, {
+    json_write!(buf, {
         name,
         age,
         active,

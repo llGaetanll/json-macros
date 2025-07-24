@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use json_traits::Serialize;
-use json_writer::json;
+use json_writer::json_write;
 
 macro_rules! assert_eq {
     ($left:expr, $right:expr) => {
@@ -17,7 +17,7 @@ fn test_true() {
     let mut buf = Vec::new();
 
     let value = true;
-    json!(buf, value);
+    json_write!(buf, value);
 
     assert_eq!(buf, b"true");
 }
@@ -27,7 +27,7 @@ fn test_false() {
     let mut buf = Vec::new();
 
     let value = false;
-    json!(buf, value);
+    json_write!(buf, value);
 
     assert_eq!(buf, b"false");
 }
@@ -37,7 +37,7 @@ fn test_number_whole() {
     let mut buf = Vec::new();
 
     let value = 1;
-    json!(buf, value);
+    json_write!(buf, value);
 
     assert_eq!(buf, b"1");
 }
@@ -47,7 +47,7 @@ fn test_number_negative() {
     let mut buf = Vec::new();
 
     let value = -1;
-    json!(buf, value);
+    json_write!(buf, value);
 
     assert_eq!(buf, b"-1");
 }
@@ -60,7 +60,7 @@ fn test_number_float() {
     let mut buf = Vec::new();
 
     let value: f32 = 3.141592653;
-    json!(buf, value);
+    json_write!(buf, value);
 
     assert_eq!(buf, b"3.141592653");
 }
@@ -70,7 +70,7 @@ fn test_string_empty() {
     let mut buf = Vec::new();
 
     let value = "";
-    json!(buf, value);
+    json_write!(buf, value);
 
     assert_eq!(buf, b"\"\"");
 }
@@ -80,7 +80,7 @@ fn test_string_nonempty() {
     let mut buf = Vec::new();
 
     let value = "Hello, world";
-    json!(buf, value);
+    json_write!(buf, value);
 
     assert_eq!(buf, b"\"Hello, world\"");
 }
@@ -90,7 +90,7 @@ fn test_array_empty() {
     let mut buf = Vec::new();
 
     let value: [i32; 0] = [];
-    json!(buf, value);
+    json_write!(buf, value);
 
     assert_eq!(buf, b"[]");
 }
@@ -100,7 +100,7 @@ fn test_array_one() {
     let mut buf = Vec::new();
 
     let value = vec![1];
-    json!(buf, value);
+    json_write!(buf, value);
 
     assert_eq!(buf, b"[1]");
 }
@@ -110,7 +110,7 @@ fn test_array_many() {
     let mut buf = Vec::new();
 
     let value = vec![true, false];
-    json!(buf, value);
+    json_write!(buf, value);
 
     assert_eq!(buf, b"[true,false]");
 }
@@ -120,7 +120,7 @@ fn test_object_empty() {
     let mut buf = Vec::new();
 
     let map: HashMap<String, i32> = HashMap::new();
-    json!(buf, map);
+    json_write!(buf, map);
 
     assert_eq!(buf, b"{}");
 }
@@ -134,7 +134,7 @@ fn test_object_shallow() {
         .map(|(k, v)| (k.to_string(), v.to_string()))
         .into_iter()
         .collect();
-    json!(buf, map);
+    json_write!(buf, map);
 
     assert_eq!(buf, br#"{"first":"Michael","last":"Scott"}"#);
 }

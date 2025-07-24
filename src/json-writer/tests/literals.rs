@@ -1,5 +1,5 @@
 use json_traits::Serialize;
-use json_writer::json;
+use json_writer::json_write;
 
 macro_rules! assert_eq {
     ($left:expr, $right:expr) => {
@@ -13,91 +13,91 @@ macro_rules! assert_eq {
 #[test]
 fn test_null() {
     let mut buf = Vec::new();
-    json!(buf, null);
+    json_write!(buf, null);
     assert_eq!(buf, b"null");
 }
 
 #[test]
 fn test_true() {
     let mut buf = Vec::new();
-    json!(buf, true);
+    json_write!(buf, true);
     assert_eq!(buf, b"true");
 }
 
 #[test]
 fn test_false() {
     let mut buf = Vec::new();
-    json!(&mut buf, false);
+    json_write!(&mut buf, false);
     assert_eq!(buf, b"false");
 }
 
 #[test]
 fn test_number_whole() {
     let mut buf = Vec::new();
-    json!(buf, 1);
+    json_write!(buf, 1);
     assert_eq!(buf, b"1");
 }
 
 #[test]
 fn test_number_negative() {
     let mut buf = Vec::new();
-    json!(buf, -1);
+    json_write!(buf, -1);
     assert_eq!(buf, b"-1");
 }
 
 #[test]
 fn test_number_float() {
     let mut buf = Vec::new();
-    json!(buf, 3.141592653);
+    json_write!(buf, 3.141592653);
     assert_eq!(buf, b"3.141592653");
 }
 
 #[test]
 fn test_string_empty() {
     let mut buf = Vec::new();
-    json!(buf, "");
+    json_write!(buf, "");
     assert_eq!(buf, b"\"\"");
 }
 
 #[test]
 fn test_string_nonempty() {
     let mut buf = Vec::new();
-    json!(buf, "Hello, world");
+    json_write!(buf, "Hello, world");
     assert_eq!(buf, b"\"Hello, world\"");
 }
 
 #[test]
 fn test_array_empty() {
     let mut buf = Vec::new();
-    json!(buf, []);
+    json_write!(buf, []);
     assert_eq!(buf, b"[]");
 }
 
 #[test]
 fn test_array_one() {
     let mut buf = Vec::new();
-    json!(buf, [null]);
+    json_write!(buf, [null]);
     assert_eq!(buf, b"[null]");
 }
 
 #[test]
 fn test_array_many() {
     let mut buf = Vec::new();
-    json!(buf, [null, true, false]);
+    json_write!(buf, [null, true, false]);
     assert_eq!(buf, b"[null,true,false]");
 }
 
 #[test]
 fn test_object_empty() {
     let mut buf = Vec::new();
-    json!(buf, {});
+    json_write!(buf, {});
     assert_eq!(buf, b"{}");
 }
 
 #[test]
 fn test_object_shallow() {
     let mut buf = Vec::new();
-    json!(buf, {
+    json_write!(buf, {
         name: "Michael",
         age: 42
     });
@@ -107,7 +107,7 @@ fn test_object_shallow() {
 #[test]
 fn test_object_deep() {
     let mut buf = Vec::new();
-    json!(buf, {
+    json_write!(buf, {
         name: "Michael",
         age: 42,
         friends: [

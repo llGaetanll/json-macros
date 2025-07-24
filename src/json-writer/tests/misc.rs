@@ -1,12 +1,12 @@
 use json_traits::Serialize;
-use json_writer::json_write;
+use json_writer::json;
 
 #[test]
 fn contract() {
     let mut buf = Vec::new();
 
     let value = true;
-    json_write!(buf, { value });
+    json!(&mut buf, { value });
 
     assert_eq!(buf, br#"{"value":true}"#);
 }

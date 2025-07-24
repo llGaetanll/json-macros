@@ -9,6 +9,6 @@ use parse::JsonArgs;
 #[proc_macro]
 pub fn json(input: TokenStream) -> TokenStream {
     let args = parse_macro_input!(input as JsonArgs);
-    let res = generate::gen_write(&args.buf, &args.value);
+    let res = generate::gen_json(&args.buf, &args.value);
     TokenStream::from(res)
 }

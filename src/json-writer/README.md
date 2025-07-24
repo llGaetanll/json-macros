@@ -15,7 +15,7 @@
     - [x] arrays (`Vec<S>`, `&[S]`, `Box<[S]>`, ...)
     - [x] objects (`HashMap<(string-like), S>`, `BTreeMap<(string-like), S>`)
 - [x] Support dyn object value contraction
-- [ ] Composability
+- [x] Composability
 - [ ] Add derive macro for `Serialize`
 - [ ] Static AST optimization
       i.e. If the object has a lot of static fields in a row, just push a

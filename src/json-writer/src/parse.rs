@@ -27,6 +27,7 @@ pub enum JsonValue {
     String(String),
     Number(String),
     Array(Vec<JsonValue>),
+    // TODO: The key here could just be a static string?
     Object(Vec<(String, JsonValue)>),
     Dyn(Ident),
 }

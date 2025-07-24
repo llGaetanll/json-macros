@@ -2,6 +2,7 @@ use proc_macro::TokenStream;
 use syn::parse_macro_input;
 
 mod generate;
+mod ir;
 mod parse;
 
 use parse::JsonArgs;

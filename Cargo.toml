@@ -8,3 +8,4 @@ quote = "1.0"
 syn = { version = "2.0", features = ["full"] }
 itoa = { version = "1.0" }
 ryu = { version = "1.0" }
+insta = "1.34"

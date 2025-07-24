@@ -12,3 +12,6 @@ quote = { workspace = true }
 syn = { workspace = true }
 
 json-traits = { path = "../json-traits" }
+
+[dev-dependencies]
+insta = { workspace = true }

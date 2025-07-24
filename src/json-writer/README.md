@@ -8,63 +8,31 @@
 - [x] Support lit arrays
 - [x] Support lit objects
 - [x] Support non-literals
-    - [x] options (map to null?)
-    - [x] bools
-    - [x] strings
-    - [x] numbers
-    - [x] arrays
-    - [ ] objects
+    - [x] nulls (`Option<S: Serialize>`)
+    - [x] bools (`bool`)
+    - [x] strings (string-like: `String`, `&str`, `Cow<str>`, `Box<str>`, ...)
+    - [x] numbers (All rust number types supported)
+    - [x] arrays (`Vec<S>`, `&[S]`, `Box<[S]>`, ...)
+    - [x] objects (`HashMap<(string-like), S>`, `BTreeMap<(string-like), S>`)
 - [x] Support dyn object value contraction
 - [ ] Composability
 - [ ] Add derive macro for `Serialize`
+- [ ] Static AST optimization
+      i.e. If the object has a lot of static fields in a row, just push a
+      massive byte slice to the buffer instead of calling `buf.push` a
+      million times
 
 ## Reach
-- [ ] Better optimizations on mostly-literal objects
 - [ ] Writes to types more general than `&mut Vec<u8>`
+- [ ] Size hints on values?
+      ```rust
+      let mut buf = Vec::new();
 
-## Non-literal support
-
-We want to be able to do this
-```rust
-let mut buf = Vec::new();
-let value = 5;
-
-json!(buf, {
-    number: value
-})
-```
-
-What should the code gen be? First of all, let's to do *this*:
-```rust
-let mut buf = Vec::new();
-let value = 5;
-
-json!(buf, value)
-```
-
-After all, `5` is a fine json value. How about this?
-```rust
-let mut buf = Vec::new();
-let value = 5;
-
-buf.write_all(value.to_string().as_bytes()).unwrap();
-```
-
-The big idea is that whatever `value` is, we need to be able to turn it into
-bytes. If we can do that, we're in business.
-
-Actually that's not quite right, what about this?
-```rust
-let mut buf = Vec::new();
-let value = b"boo";
-
-json!(buf, {
-    monster: value
-})
-```
-Notice that `value` is not quoted, so it's *not* a string. Looks like we need
-type checking.
-
+      let value = // some dynamic value here
+      json!(buf, {
+          name: value in 12..15 // meaning we expect this value to take between 12 and 15 bytes
+      })
+      ```
 
 ## Composability
 We should be able to do this?

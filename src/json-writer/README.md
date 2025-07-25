@@ -17,7 +17,7 @@
 - [x] Support dyn object value contraction
 - [x] Composability
 - [ ] Add derive macro for `Serialize`
-- [ ] Static AST optimization
+- [x] Static AST optimization
       i.e. If the object has a lot of static fields in a row, just push a
       massive byte slice to the buffer instead of calling `buf.push` a
       million times

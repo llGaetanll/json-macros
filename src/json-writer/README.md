@@ -1,3 +1,10 @@
+# How it works
+
+This crate provides 3 macros:
+- `json`: Writes json to the provided buffer
+- `lazy`: Defers writing to the buffer with a closure
+- `lazy_move`: Like `lazy` but the closure is marked `move`.
+
 # TODO
 
 ## Basics

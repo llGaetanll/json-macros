@@ -46,8 +46,12 @@ fn merge(buf: &mut Vec<u8>, lir: &mut Vec<JsonChunk>, value: &JsonValue) {
             lir.push(JsonChunk::Dyn(ident.clone()));
         }
         JsonValue::Null => buf.extend_from_slice(b"null"),
-        JsonValue::Bool(b) => b.serialize(buf),
-        JsonValue::String(s) => s.serialize(buf),
+        JsonValue::Bool(b) => b
+            .serialize(buf)
+            .expect("Failed to serialize JsonValue::bool"),
+        JsonValue::String(s) => s
+            .serialize(buf)
+            .expect("Failed to serialize JsonValue::String"),
         JsonValue::Number(n) => buf.extend_from_slice(n.as_bytes()),
         JsonValue::Array(arr) => {
             buf.push(b'[');

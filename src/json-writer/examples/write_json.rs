@@ -1,7 +1,9 @@
+use std::io::Write;
+
 use json_traits::Serialize;
 use json_writer::json;
 
-fn main() {
+fn main() -> std::io::Result<()> {
     let mut buf = Vec::new();
 
     let name = String::from("Alice Johnson");
@@ -41,4 +43,6 @@ fn main() {
         String::from_utf8_lossy(&buf),
         String::from_utf8_lossy(exp)
     );
+
+    Ok(())
 }

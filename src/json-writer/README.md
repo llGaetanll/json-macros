@@ -23,15 +23,15 @@ This crate provides 3 macros:
     - [x] objects (`HashMap<(string-like), S>`, `BTreeMap<(string-like), S>`)
 - [x] Support dyn object value contraction
 - [x] Composability
-- [ ] Add derive macro for `Serialize`
+- [x] Writes to types more general than `&mut Vec<u8>`
 - [x] Static AST optimization
       i.e. If the object has a lot of static fields in a row, just push a
       massive byte slice to the buffer instead of calling `buf.push` a
       million times
 - [ ] Dynamic key support
+- [ ] Add derive macro for `Serialize`
 
 ## Reach
-- [ ] Writes to types more general than `&mut Vec<u8>`
 - [ ] Size hints on values?
       ```rust
       let mut buf = Vec::new();

@@ -1,9 +1,11 @@
+use std::io::Write;
+
 use json_traits::Serialize;
 use json_writer::json;
 use json_writer::lazy;
 use json_writer::lazy_move;
 
-fn gen_profile(first: &str, last: &str) -> impl Serialize {
+fn gen_profile(first: &str, last: &str) -> impl Serialize<Vec<u8>> {
     lazy_move!({ first, last })
 }
 
@@ -11,7 +13,7 @@ fn gen_profile(first: &str, last: &str) -> impl Serialize {
 //
 //     cargo expand --package json-writer --example compose
 //
-fn main() {
+fn main() -> std::io::Result<()> {
     let mut buf = Vec::new();
 
     let michael = gen_profile("Michael", "Scott");
@@ -38,7 +40,9 @@ fn main() {
 
     // We can also just call serialize directly!
     // This is what our macros do under the hood
-    dwight.serialize(&mut buf);
+    dwight.serialize(&mut buf)?;
 
     println!("{}", String::from_utf8_lossy(&buf));
+
+    Ok(())
 }

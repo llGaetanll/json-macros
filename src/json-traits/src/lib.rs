@@ -1,19 +1,23 @@
-pub trait Serialize {
-    fn serialize(&self, buf: &mut Vec<u8>);
+use std::io::Write;
+
+pub trait Serialize<W: Write> {
+    fn serialize(&self, buf: &mut W) -> std::io::Result<()>;
 }
 
-impl Serialize for () {
-    fn serialize(&self, _buf: &mut Vec<u8>) {}
+impl<W: Write> Serialize<W> for () {
+    fn serialize(&self, _buf: &mut W) -> std::io::Result<()> {
+        Ok(())
+    }
 }
 
 macro_rules! serialize_int {
     ($($type:ty),* $(,)?) => {
         $(
-            impl Serialize for $type {
-                fn serialize(&self, buf: &mut Vec<u8>) {
+            impl<W: Write> Serialize<W> for $type {
+                fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
                     let mut n_buf = itoa::Buffer::new();
                     let n_str = n_buf.format(*self);
-                    buf.extend_from_slice(n_str.as_bytes());
+                    buf.write_all(n_str.as_bytes())
                 }
             }
         )*
@@ -23,11 +27,11 @@ macro_rules! serialize_int {
 macro_rules! serialize_float {
     ($($type:ty),* $(,)?) => {
         $(
-            impl Serialize for $type {
-                fn serialize(&self, buf: &mut Vec<u8>) {
+            impl<W: Write> Serialize<W> for $type {
+                fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
                     let mut n_buf = ryu::Buffer::new();
                     let n_str = n_buf.format(*self);
-                    buf.extend_from_slice(n_str.as_bytes());
+                    buf.write_all(n_str.as_bytes())
                 }
             }
         )*
@@ -45,70 +49,72 @@ serialize_float!(
     f32, f64
 );
 
-impl Serialize for bool {
-    fn serialize(&self, buf: &mut Vec<u8>) {
+impl<W: Write> Serialize<W> for bool {
+    fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
         if *self {
-            buf.extend_from_slice(b"true");
+            buf.write_all(b"true")?;
         } else {
-            buf.extend_from_slice(b"false");
+            buf.write_all(b"false")?;
         }
+
+        Ok(())
     }
 }
 
 macro_rules! serialize_string_like {
     ($($ty:ty),* $(,)?) => {
         $(
-            impl Serialize for $ty {
-                fn serialize(&self, buf: &mut Vec<u8>) {
-                    buf.push(b'"');
-                    buf.extend_from_slice(self.as_bytes());
-                    buf.push(b'"');
+            impl<W: Write> Serialize<W> for $ty {
+                fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
+                    buf.write_all(&[b'"'])?;
+                    buf.write_all(self.as_bytes())?;
+                    buf.write_all(&[b'"'])
                 }
             }
 
-            impl<T> Serialize for ::std::collections::HashMap<$ty, T>
+            impl<T, W: Write> Serialize<W> for ::std::collections::HashMap<$ty, T>
             where
-                T: Serialize,
+                T: Serialize<W>,
             {
-                fn serialize(&self, buf: &mut Vec<u8>) {
-                    buf.push(b'{');
+                fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
+                    buf.write_all(&[b'{'])?;
                     for (i, (k, v)) in self.iter().enumerate() {
                         if i > 0 {
-                            buf.push(b',');
+                            buf.write_all(&[b','])?;
                         }
 
-                        buf.push(b'"');
-                        buf.extend_from_slice(k.as_bytes());
-                        buf.push(b'"');
+                        buf.write_all(&[b'"'])?;
+                        buf.write_all(k.as_bytes())?;
+                        buf.write_all(&[b'"'])?;
 
-                        buf.push(b':');
+                        buf.write_all(&[b':'])?;
 
-                        v.serialize(buf);
+                        v.serialize(buf)?;
                     }
-                    buf.push(b'}');
+                    buf.write_all(&[b'}'])
                 }
             }
 
-            impl<T> Serialize for ::std::collections::BTreeMap<$ty, T>
+            impl<T, W: Write> Serialize<W> for ::std::collections::BTreeMap<$ty, T>
             where
-                T: Serialize,
+                T: Serialize<W>,
             {
-                fn serialize(&self, buf: &mut Vec<u8>) {
-                    buf.push(b'{');
+                fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
+                    buf.write_all(&[b'{'])?;
                     for (i, (k, v)) in self.iter().enumerate() {
                         if i > 0 {
-                            buf.push(b',');
+                            buf.write_all(&[b','])?;
                         }
 
-                        buf.push(b'"');
-                        buf.extend_from_slice(k.as_bytes());
-                        buf.push(b'"');
+                        buf.write_all(&[b'"'])?;
+                        buf.write_all(k.as_bytes())?;
+                        buf.write_all(&[b'"'])?;
 
-                        buf.push(b':');
+                        buf.write_all(&[b':'])?;
 
-                        v.serialize(buf);
+                        v.serialize(buf)?;
                     }
-                    buf.push(b'}');
+                    buf.write_all(&[b'}'])
                 }
             }
         )*
@@ -123,50 +129,53 @@ serialize_string_like! {
     std::borrow::Cow<'_, str>,
 }
 
-impl<T> Serialize for Option<T>
+impl<T, W: Write> Serialize<W> for Option<T>
 where
-    T: Serialize,
+    T: Serialize<W>,
 {
-    fn serialize(&self, buf: &mut Vec<u8>) {
+    fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
         match self {
             Some(t) => t.serialize(buf),
-            None => buf.extend_from_slice(b"null"),
+            None => buf.write_all(b"null"),
         }
     }
 }
 
-fn serialize_slice_like<T: AsRef<[S]>, S: Serialize>(arr: T, buf: &mut Vec<u8>) {
+fn serialize_slice_like<T: AsRef<[S]>, S: Serialize<W>, W: Write>(
+    arr: T,
+    buf: &mut W,
+) -> std::io::Result<()> {
     let arr: &[S] = arr.as_ref();
 
-    buf.push(b'[');
+    buf.write_all(b"[")?;
     for (i, item) in arr.iter().enumerate() {
         if i > 0 {
-            buf.push(b',');
+            buf.write_all(b",")?;
         }
 
-        item.serialize(buf);
+        item.serialize(buf)?;
     }
-    buf.push(b']');
+    buf.write_all(b"]")
 }
 
-impl<T, const N: usize> Serialize for [T; N]
+impl<T, W: Write, const N: usize> Serialize<W> for [T; N]
 where
-    T: Serialize,
+    T: Serialize<W>,
 {
-    fn serialize(&self, buf: &mut Vec<u8>) {
-        serialize_slice_like(self, buf);
+    fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
+        serialize_slice_like(self, buf)
     }
 }
 
 macro_rules! serialize_slice_like {
     ($($ty:ty),* $(,)?) => {
         $(
-            impl<T> Serialize for $ty
+            impl<T, W: Write> Serialize<W> for $ty
             where
-                T: Serialize,
+                T: Serialize<W>,
             {
-                fn serialize(&self, buf: &mut Vec<u8>) {
-                    serialize_slice_like(self, buf);
+                fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
+                    serialize_slice_like(self, buf)
                 }
             }
         )*
@@ -181,11 +190,11 @@ serialize_slice_like! {
 }
 
 // WARN: Maybe this is a mistake
-impl<F> Serialize for F
+impl<F, W: Write> Serialize<W> for F
 where
-    F: Fn(&mut Vec<u8>),
+    F: Fn(&mut W) -> std::io::Result<()>,
 {
-    fn serialize(&self, buf: &mut Vec<u8>) {
+    fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
         self(buf)
     }
 }

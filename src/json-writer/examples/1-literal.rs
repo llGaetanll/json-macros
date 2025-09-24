@@ -9,5 +9,9 @@ fn main() -> std::io::Result<()> {
         name: "John",
         age: 30,
         car: null
-    })
+    });
+
+    println!("{}", String::from_utf8_lossy(&buf));
+
+    Ok(())
 }

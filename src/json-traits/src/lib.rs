@@ -1,4 +1,54 @@
+use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::io::Write;
+
+/// A trait that allows us to guard what types of values we can serialize in key position.
+///
+/// Put simply: `vec![1, 2, 3]` makes no sense as a key, but `"foo"` or `String::from("foo")` do.
+/// This is a restricted version of `Serialize` that prevents us from using any type as a JSON key.
+pub trait SerializeStr<W: Write>: private::Sealed {
+    fn serialize_str(&self, buf: &mut W) -> std::io::Result<()>;
+}
+
+mod private {
+    pub trait Sealed {}
+}
+
+macro_rules! serialize_str {
+    ($($type:ty),* $(,)?) => {
+        $(
+            impl private::Sealed for $type { }
+
+            impl<W: Write> SerializeStr<W> for $type {
+                fn serialize_str(&self, buf: &mut W) -> std::io::Result<()> {
+                    buf.write_all(b"\"")?;
+                    buf.write_all(self.as_bytes())?;
+                    buf.write_all(b"\"")?;
+
+                    Ok(())
+                }
+            }
+
+            impl<W: Write> Serialize<W> for $type {
+                fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
+                    buf.write_all(b"\"")?;
+                    buf.write_all(self.as_bytes())?;
+                    buf.write_all(b"\"")?;
+
+                    Ok(())
+                }
+            }
+        )*
+    };
+}
+
+serialize_str! {
+    String,
+    &str,
+    &String,
+    Box<str>,
+    std::borrow::Cow<'_, str>,
+}
 
 pub trait Serialize<W: Write> {
     fn serialize(&self, buf: &mut W) -> std::io::Result<()>;
@@ -61,72 +111,46 @@ impl<W: Write> Serialize<W> for bool {
     }
 }
 
-macro_rules! serialize_string_like {
-    ($($ty:ty),* $(,)?) => {
-        $(
-            impl<W: Write> Serialize<W> for $ty {
-                fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
-                    buf.write_all(&[b'"'])?;
-                    buf.write_all(self.as_bytes())?;
-                    buf.write_all(&[b'"'])
-                }
+impl<T, W: Write, S: SerializeStr<W>> Serialize<W> for HashMap<S, T>
+where
+    T: Serialize<W>,
+{
+    fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
+        buf.write_all(b"{")?;
+        for (i, (k, v)) in self.iter().enumerate() {
+            if i > 0 {
+                buf.write_all(b",")?;
             }
 
-            impl<T, W: Write> Serialize<W> for ::std::collections::HashMap<$ty, T>
-            where
-                T: Serialize<W>,
-            {
-                fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
-                    buf.write_all(&[b'{'])?;
-                    for (i, (k, v)) in self.iter().enumerate() {
-                        if i > 0 {
-                            buf.write_all(&[b','])?;
-                        }
+            k.serialize_str(buf)?;
 
-                        buf.write_all(&[b'"'])?;
-                        buf.write_all(k.as_bytes())?;
-                        buf.write_all(&[b'"'])?;
+            buf.write_all(b":")?;
 
-                        buf.write_all(&[b':'])?;
-
-                        v.serialize(buf)?;
-                    }
-                    buf.write_all(&[b'}'])
-                }
-            }
-
-            impl<T, W: Write> Serialize<W> for ::std::collections::BTreeMap<$ty, T>
-            where
-                T: Serialize<W>,
-            {
-                fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
-                    buf.write_all(&[b'{'])?;
-                    for (i, (k, v)) in self.iter().enumerate() {
-                        if i > 0 {
-                            buf.write_all(&[b','])?;
-                        }
-
-                        buf.write_all(&[b'"'])?;
-                        buf.write_all(k.as_bytes())?;
-                        buf.write_all(&[b'"'])?;
-
-                        buf.write_all(&[b':'])?;
-
-                        v.serialize(buf)?;
-                    }
-                    buf.write_all(&[b'}'])
-                }
-            }
-        )*
-    };
+            v.serialize(buf)?;
+        }
+        buf.write_all(b"}")
+    }
 }
 
-serialize_string_like! {
-    String,
-    &str,
-    &String,
-    Box<str>,
-    std::borrow::Cow<'_, str>,
+impl<T, W: Write, S: SerializeStr<W>> Serialize<W> for BTreeMap<S, T>
+where
+    T: Serialize<W>,
+{
+    fn serialize(&self, buf: &mut W) -> std::io::Result<()> {
+        buf.write_all(b"{")?;
+        for (i, (k, v)) in self.iter().enumerate() {
+            if i > 0 {
+                buf.write_all(b",")?;
+            }
+
+            k.serialize_str(buf)?;
+
+            buf.write_all(b":")?;
+
+            v.serialize(buf)?;
+        }
+        buf.write_all(b"}")
+    }
 }
 
 impl<T, W: Write> Serialize<W> for Option<T>

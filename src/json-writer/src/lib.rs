@@ -6,8 +6,7 @@ mod ir;
 mod parse;
 
 use parse::JsonArgs;
-
-use crate::parse::JsonValue;
+use parse::JsonValue;
 
 #[proc_macro]
 /// Generate a `json` object which is eagerly written to the buffer.

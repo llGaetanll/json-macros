@@ -1,6 +1,7 @@
 use std::io::Write;
 
 use json_traits::Serialize;
+use json_traits::SerializeStr;
 use json_writer::json;
 
 #[test]
@@ -41,6 +42,22 @@ fn write_array_too_small() -> std::io::Result<()> {
     let res = inner_write(&mut buf);
 
     assert!(res.is_err());
+
+    Ok(())
+}
+
+#[test]
+fn dynamic_key() -> std::io::Result<()> {
+    let mut buf = Vec::new();
+
+    let key = String::from("name");
+
+    json!(&mut buf, {
+        [key]: "Michael"
+    });
+
+    println!("{}", String::from_utf8_lossy(&buf));
+    assert_eq!(buf, br#"{"name":"Michael"}"#);
 
     Ok(())
 }

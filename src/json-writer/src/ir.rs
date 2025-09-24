@@ -3,9 +3,13 @@ use std::fmt::Debug;
 use json_traits::Serialize;
 use proc_macro2::Ident;
 
+use crate::parse::JsonKey;
 use crate::parse::JsonValue;
 
 pub enum JsonChunk {
+    // Dynamic identifies in key-position. These identifiers
+    // must impl `SerializeStr` to be a valid key
+    DynStr(Ident),
     Dyn(Ident),
     Static(Vec<u8>),
 }
@@ -13,6 +17,7 @@ pub enum JsonChunk {
 impl Debug for JsonChunk {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            JsonChunk::DynStr(ident) => f.debug_tuple("DynStr").field(ident).finish(),
             JsonChunk::Dyn(ident) => f.debug_tuple("Dyn").field(ident).finish(),
             JsonChunk::Static(bytes) => {
                 let utf8_str = String::from_utf8_lossy(bytes);
@@ -74,15 +79,32 @@ fn merge(buf: &mut Vec<u8>, lir: &mut Vec<JsonChunk>, value: &JsonValue) {
                     buf.push(b',');
                 }
 
-                buf.push(b'"');
-                buf.extend_from_slice(k.as_bytes());
-                buf.push(b'"');
+                serialize_key(buf, lir, k);
                 buf.push(b':');
 
                 merge(buf, lir, v);
             }
 
             buf.push(b'}');
+        }
+    }
+}
+
+fn serialize_key(buf: &mut Vec<u8>, lir: &mut Vec<JsonChunk>, key: &JsonKey) {
+    match key {
+        JsonKey::Lit(ident) => {
+            buf.push(b'"');
+            buf.extend_from_slice(ident.to_string().as_bytes());
+            buf.push(b'"');
+        }
+        JsonKey::Dyn(ident) => {
+            if !buf.is_empty() {
+                lir.push(JsonChunk::Static(buf.clone()));
+                buf.clear();
+            }
+
+            // Dynamic JSON keys must be string-serializable
+            lir.push(JsonChunk::DynStr(ident.clone()));
         }
     }
 }
@@ -94,6 +116,7 @@ mod test {
     use proc_macro2::Span;
 
     use super::ast_merge;
+    use crate::parse::JsonKey;
     use crate::parse::JsonValue;
 
     #[test]
@@ -117,12 +140,15 @@ mod test {
     fn gen_static() {
         let value = JsonValue::Object(vec![
             (
-                "first".to_string(),
+                JsonKey::Lit(Ident::new("first", Span::call_site())),
                 JsonValue::String("Michael".to_string()),
             ),
-            ("last".to_string(), JsonValue::String("Scott".to_string())),
             (
-                "friends".to_string(),
+                JsonKey::Lit(Ident::new("last", Span::call_site())),
+                JsonValue::String("Scott".to_string()),
+            ),
+            (
+                JsonKey::Lit(Ident::new("friends", Span::call_site())),
                 JsonValue::Array(vec![
                     JsonValue::String("Pam".to_string()),
                     JsonValue::String("Jim".to_string()),
@@ -145,16 +171,19 @@ mod test {
     fn gen_dyn_simple() {
         let value = JsonValue::Object(vec![
             (
-                "first".to_string(),
+                JsonKey::Lit(Ident::new("first", Span::call_site())),
                 JsonValue::String("Michael".to_string()),
             ),
-            ("last".to_string(), JsonValue::String("Scott".to_string())),
             (
-                "age".to_string(),
+                JsonKey::Lit(Ident::new("last", Span::call_site())),
+                JsonValue::String("Scott".to_string()),
+            ),
+            (
+                JsonKey::Lit(Ident::new("age", Span::call_site())),
                 JsonValue::Dyn(Ident::new("dummy", Span::call_site())),
             ),
             (
-                "friends".to_string(),
+                JsonKey::Lit(Ident::new("friends", Span::call_site())),
                 JsonValue::Array(vec![
                     JsonValue::String("Pam".to_string()),
                     JsonValue::String("Jim".to_string()),
@@ -176,6 +205,45 @@ mod test {
             ),
             Static(
                 ",\"friends\":[\"Pam\",\"Jim\"]}",
+            ),
+        ]
+        "#);
+    }
+
+    #[test]
+    fn gen_dyn_key() {
+        let value = JsonValue::Object(vec![
+            (
+                JsonKey::Lit(Ident::new("first", Span::call_site())),
+                JsonValue::String("Michael".to_string()),
+            ),
+            (
+                JsonKey::Dyn(Ident::new("last", Span::call_site())),
+                JsonValue::String("Scott".to_string()),
+            ),
+            (
+                JsonKey::Lit(Ident::new("friends", Span::call_site())),
+                JsonValue::Array(vec![
+                    JsonValue::String("Pam".to_string()),
+                    JsonValue::String("Jim".to_string()),
+                ]),
+            ),
+        ]);
+
+        let lir = ast_merge(&value);
+
+        assert_debug_snapshot!(lir, @r#"
+        [
+            Static(
+                "{\"first\":\"Michael\",",
+            ),
+            DynStr(
+                Ident(
+                    last,
+                ),
+            ),
+            Static(
+                ":\"Scott\",\"friends\":[\"Pam\",\"Jim\"]}",
             ),
         ]
         "#);

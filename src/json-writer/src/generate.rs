@@ -7,6 +7,9 @@ pub fn from_chunks(buf: &Expr, chunks: &[JsonChunk]) -> proc_macro2::TokenStream
     let statements: Vec<proc_macro2::TokenStream> = chunks
         .iter()
         .map(|chunk| match chunk {
+            JsonChunk::DynStr(ident) => quote! {
+                #ident.serialize_str(#buf)?;
+            },
             JsonChunk::Dyn(ident) => quote! {
                 #ident.serialize(#buf)?;
             },
@@ -33,6 +36,9 @@ fn gen_lazy_statements(chunks: &[JsonChunk]) -> Vec<proc_macro2::TokenStream> {
     chunks
         .iter()
         .map(|chunk| match chunk {
+            JsonChunk::DynStr(ident) => quote! {
+                #ident.serialize_str(__buf)?;
+            },
             JsonChunk::Dyn(ident) => quote! {
                 #ident.serialize(__buf)?;
             },

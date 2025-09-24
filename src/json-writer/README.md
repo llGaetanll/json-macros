@@ -28,7 +28,7 @@ This crate provides 3 macros:
       i.e. If the object has a lot of static fields in a row, just push a
       massive byte slice to the buffer instead of calling `buf.push` a
       million times
-- [ ] Dynamic key support
+- [x] Dynamic key support
 - [ ] Add derive macro for `Serialize`
 
 ## Reach
